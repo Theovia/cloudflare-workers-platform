@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloudflare Workers Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e5e5e5;
+    --text-muted: #888;
+    --accent: #f6821f;
+    --accent2: #fbad41;
+    --blue: #4a9eff;
+    --green: #34d399;
+    --red: #f87171;
+    --purple: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .hero {
+    padding: 80px 20px 60px;
+    text-align: center;
+    background: linear-gradient(180deg, #1a1000 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  section {
+    padding: 60px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  section:last-child { border-bottom: none; }
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 32px;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 32px 0 16px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--accent2);
+  }
+  p, li { color: var(--text); font-size: 0.95rem; }
+  ul, ol { padding-left: 24px; margin-bottom: 16px; }
+  li { margin-bottom: 8px; }
+  strong { color: #fff; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--surface2);
+    color: var(--accent);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  tr:hover td { background: var(--surface); }
+
+  /* Cards grid */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card h4 { margin-top: 0; color: var(--accent2); }
+  .card p { color: var(--text-muted); font-size: 0.88rem; }
+
+  /* Mermaid diagrams */
+  .diagram-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+  .diagram-block h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--accent2);
+    font-size: 1.1rem;
+  }
+  .mermaid {
+    display: flex;
+    justify-content: center;
+  }
+  .mermaid svg { max-width: 100%; height: auto; }
+
+  /* Code */
+  code {
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--accent2);
+  }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .badge-green { background: #064e3b; color: var(--green); }
+  .badge-orange { background: #451a03; color: var(--accent2); }
+  .badge-blue { background: #1e3a5f; color: var(--blue); }
+  .badge-red { background: #450a0a; color: var(--red); }
+
+  /* Use case list */
+  .use-case {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin: 12px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .use-case.done { border-left-color: var(--green); }
+  .use-case h4 { margin: 0 0 4px; font-size: 0.95rem; }
+  .use-case p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+
+  /* Comparison highlights */
+  .check { color: var(--green); }
+  .cross { color: var(--red); }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* TOC */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 32px 0;
+  }
+  .toc h3 { margin: 0 0 12px; font-size: 1rem; color: var(--text-muted); }
+  .toc ul { list-style: none; padding: 0; margin: 0; columns: 2; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { color: var(--text); font-size: 0.9rem; }
+  .toc a:hover { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .toc ul { columns: 1; }
+    .cards { grid-template-columns: 1fr; }
+    .hero { padding: 48px 16px 40px; }
+    section { padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>⚡ Cloudflare Workers Platform</h1>
+  <p>Infraestructura serverless edge-first para automatizaciones, APIs, webhooks y herramientas de consultoría de IA.</p>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <h3>Contenido</h3>
+    <ul>
+      <li><a href="#why">Por qué Workers</a></li>
+      <li><a href="#ecosystem">Ecosistema Completo</a></li>
+      <li><a href="#architecture">Diagramas de Arquitectura</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#use-cases">Casos de Uso</a></li>
+      <li><a href="#quickstart">Quick Start</a></li>
+      <li><a href="#comparison">Workers vs Alternativas</a></li>
+      <li><a href="#limitations">Limitaciones</a></li>
+      <li><a href="#links">Referencias</a></li>
+    </ul>
+  </div>
+
+  <!-- WHY -->
+  <section id="why">
+    <h2>Por qué Cloudflare Workers</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ventaja</th><th>Detalle</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Cero servers</strong></td><td>No hay VPS, no hay Docker, no hay mantenimiento. Deploy con <code>wrangler deploy</code></td></tr>
+          <tr><td><strong>Edge global</strong></td><td>Código corre en 300+ ciudades. Latencia &lt;50ms para cualquier cliente</td></tr>
+          <tr><td><strong>Free tier generoso</strong></td><td>100K requests/día gratis. Plan paid $5/mes = 10M requests</td></tr>
+          <tr><td><strong>Ecosistema completo</strong></td><td>DB, storage, queues, cron, AI — todo integrado sin config externa</td></tr>
+          <tr><td><strong>JS/TS nativo</strong></td><td>Sin overhead de frameworks. Fetch API estándar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ECOSYSTEM -->
+  <section id="ecosystem">
+    <h2>Ecosistema Cloudflare — Mapa Completo</h2>
+
+    <div class="cards">
+      <div class="card">
+        <h4>⚡ Compute</h4>
+        <p><strong>Workers</strong> — Funciones serverless (JS/TS/WASM). Máx 10ms CPU free, 30s paid<br>
+        <strong>Pages Functions</strong> — Workers + sitio estático<br>
+        <strong>Durable Objects</strong> — Estado persistente + WebSockets<br>
+        <strong>Workflows</strong> — Orquestación de pasos</p>
+      </div>
+      <div class="card">
+        <h4>🗄️ Storage & Data</h4>
+        <p><strong>KV</strong> — Key-value global, eventual consistency<br>
+        <strong>D1</strong> — SQLite serverless<br>
+        <strong>R2</strong> — Object storage S3-compatible (sin egress fees!)<br>
+        <strong>Queues</strong> — Message queues async<br>
+        <strong>Vectorize</strong> — Vector DB para embeddings<br>
+        <strong>Hyperdrive</strong> — Proxy para Postgres/MySQL</p>
+      </div>
+      <div class="card">
+        <h4>🤖 AI & ML</h4>
+        <p><strong>Workers AI</strong> — Modelos de ML en el edge (LLMs, image gen, embeddings, STT)<br>
+        <strong>AI Gateway</strong> — Proxy para OpenAI/Anthropic con caching, rate limiting, logging</p>
+      </div>
+      <div class="card">
+        <h4>🔔 Triggers</h4>
+        <p><strong>HTTP</strong> — Cualquier request a tu URL<br>
+        <strong>Cron Triggers</strong> — Tareas periódicas<br>
+        <strong>Queue consumers</strong> — Cuando llega un mensaje<br>
+        <strong>Email triggers</strong> — Emails entrantes<br>
+        <strong>Tail Workers</strong> — Observar logs en real-time</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture">
+    <h2>Arquitectura — Diagramas</h2>
+
+    <div class="diagram-block">
+      <h3>1. Vista General del Ecosistema</h3>
+      <div class="mermaid">
+graph TB
+    subgraph "TRIGGERS"
+        HTTP["🌐 HTTP Requests"]
+        CRON["⏰ Cron Triggers"]
+        QUEUE_T["📨 Queue Events"]
+        EMAIL["📧 Email Events"]
+    end
+    subgraph "COMPUTE · Edge · 300+ cities"
+        W1["⚡ Worker: API Gateway"]
+        W2["⚡ Worker: Webhooks"]
+        W3["⚡ Worker: Cron Jobs"]
+        W4["⚡ Worker: AI Pipeline"]
+        DO["🔒 Durable Objects"]
+    end
+    subgraph "STORAGE"
+        KV["🗄️ KV Store"]
+        D1["🗃️ D1 SQLite"]
+        R2["📦 R2 S3"]
+        VEC["🧠 Vectorize"]
+        Q["📬 Queues"]
+    end
+    subgraph "EXTERNAL APIs"
+        OAI["OpenAI / Anthropic"]
+        WA["WhatsApp API"]
+        TG["Telegram API"]
+        GHL["GoHighLevel"]
+        STRIPE["Stripe"]
+        CAL["Calendly"]
+    end
+    HTTP --> W1 & W2
+    CRON --> W3
+    QUEUE_T --> W4
+    EMAIL --> W2
+    W1 --> KV & D1
+    W2 --> D1 & Q
+    W3 --> D1 & R2
+    W4 --> VEC & OAI
+    W1 --> GHL & STRIPE
+    W2 --> WA & TG
+    W3 --> CAL
+    W4 --> OAI
+    DO --> D1
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <h3>2. Patrón: Webhook → Process → Notify</h3>
+      <div class="mermaid">
+sequenceDiagram
+    participant Client as 📱 Cliente
+    participant Worker as ⚡ Worker
+    participant D1 as 🗃️ D1
+    participant Queue as 📬 Queue
+    participant Notifier as ⚡ Notifier
+    participant WA as 📲 WhatsApp
+    Client->>Worker: POST /webhook
+    Worker->>Worker: Validar payload
+    Worker->>D1: INSERT evento
+    Worker->>Queue: Encolar notificación
+    Worker-->>Client: 200 OK · menos de 50ms
+    Note over Queue,Notifier: Async · no bloquea response
+    Queue->>Notifier: Trigger consumer
+    Notifier->>WA: Enviar notificación
+    Notifier->>D1: UPDATE status = notified
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <h3>3. Patrón: AI Pipeline con RAG</h3>
+      <div class="mermaid">
+graph LR
+    subgraph Ingesta
+        DOC["📄 Documento"] --> EMBED["⚡ Embedder"]
+        EMBED --> VEC["🧠 Vectorize"]
+        EMBED --> R2["📦 R2"]
+    end
+    subgraph Query
+        USER["👤 Usuario"] --> API["⚡ Chat API"]
+        API --> VEC
+        VEC -->|Top K| API
+        API --> R2
+        R2 -->|Contexto| API
+        API --> LLM["🤖 LLM"]
+        LLM --> API
+        API --> USER
+    end
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <h3>4. Patrón: CRM Automático para Consultoría</h3>
+      <div class="mermaid">
+graph TB
+    subgraph "Captura de Leads"
+        FORM["📋 Discovery Form"] --> W_FORM["⚡ Form Handler"]
+        CAL["📅 Calendly"] --> W_CAL["⚡ Calendar Handler"]
+        WA_IN["📲 WhatsApp"] --> W_WA["⚡ WA Handler"]
+    end
+    subgraph Procesamiento
+        W_FORM --> D1["🗃️ D1: Leads"]
+        W_CAL --> D1
+        W_WA --> D1
+        D1 --> SCORE["⚡ Lead Scorer AI"]
+        SCORE --> KV["🗄️ KV: Cache"]
+    end
+    subgraph "Acciones Automáticas"
+        SCORE -->|Score mayor a 80| NOTIFY["📲 Notificar"]
+        SCORE -->|Score mayor a 60| SEQ["📧 Email Seq"]
+        SCORE -->|Score menor a 40| TAG["🏷️ Nurture"]
+        CRON["⏰ Daily Digest"] --> D1
+        CRON --> NOTIFY
+    end
+      </div>
+    </div>
+
+    <div class="diagram-block">
+      <h3>5. Stack Completo — Vista de Capas</h3>
+      <div class="mermaid">
+graph TB
+    subgraph "Capa 1: Edge"
+        CDN["🌐 CDN + DNS + SSL"]
+        WAF["🛡️ WAF + DDoS"]
+    end
+    subgraph "Capa 2: Compute"
+        WORKERS["⚡ Workers JS/TS"]
+        PAGES["📄 Pages"]
+    end
+    subgraph "Capa 3: Data"
+        KV2["KV"]
+        D12["D1"]
+        R22["R2"]
+        Q2["Queues"]
+    end
+    subgraph "Capa 4: AI"
+        WAI["Workers AI"]
+        AIG["AI Gateway"]
+        VEC2["Vectorize"]
+    end
+    subgraph "Capa 5: Integraciones"
+        EXT["APIs Externas"]
+        WH["Webhooks"]
+        MAIL["Email Routing"]
+    end
+    CDN --> WORKERS & PAGES
+    WAF --> WORKERS
+    WORKERS --> KV2 & D12 & R22 & Q2
+    WORKERS --> WAI & AIG & VEC2
+    WORKERS --> EXT & WH & MAIL
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <h2>Pricing — Lo que Importa</h2>
+
+    <h3>Free Plan</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Recurso</th><th>Límite</th></tr></thead>
+        <tbody>
+          <tr><td>Workers requests</td><td>100,000/día</td></tr>
+          <tr><td>KV reads</td><td>100,000/día</td></tr>
+          <tr><td>KV writes</td><td>1,000/día</td></tr>
+          <tr><td>D1 reads</td><td>5M/día</td></tr>
+          <tr><td>D1 writes</td><td>100K/día</td></tr>
+          <tr><td>D1 storage</td><td>5GB</td></tr>
+          <tr><td>R2 storage</td><td>10GB</td></tr>
+          <tr><td>R2 operations</td><td>1M Class A, 10M Class B / mes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Paid Plan — $5/mes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Recurso</th><th>Incluido</th><th>Extra</th></tr></thead>
+        <tbody>
+          <tr><td>Workers requests</td><td>10M/mes</td><td>$0.30/M</td></tr>
+          <tr><td>KV reads</td><td>10M/mes</td><td>$0.50/M</td></tr>
+          <tr><td>KV writes</td><td>1M/mes</td><td>$5.00/M</td></tr>
+          <tr><td>D1 reads</td><td>25B/mes</td><td>$0.001/M</td></tr>
+          <tr><td>D1 writes</td><td>50M/mes</td><td>$1.00/M</td></tr>
+          <tr><td>D1 storage</td><td>5GB</td><td>$0.75/GB</td></tr>
+          <tr><td>R2 storage</td><td>10GB</td><td>$0.015/GB</td></tr>
+          <tr><td>Queues</td><td>1M ops/mes</td><td>$0.40/M</td></tr>
+          <tr><td>Durable Objects</td><td>1M requests</td><td>$0.15/M</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:16px;color:var(--accent2);font-weight:600;">💡 $5/mes te da una infraestructura que en AWS/GCP costaría $50-200/mes. Y sin egress fees en R2.</p>
+  </section>
+
+  <!-- USE CASES -->
+  <section id="use-cases">
+    <h2>Casos de Uso para Consultoría</h2>
+
+    <h3>Implementado</h3>
+    <div class="use-case done">
+      <h4><span class="badge badge-green">✅ Live</span> Discovery Form Handler</h4>
+      <p>Captura leads, guarda en D1, notifica</p>
+    </div>
+
+    <h3>Próximos</h3>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Webhook Hub</h4>
+      <p>Endpoint central para webhooks de GHL, Stripe, Calendly → procesar → notificar</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> AI Chat API</h4>
+      <p>RAG sobre documentos de consultoría para clientes</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Lead Scoring Automático</h4>
+      <p>Webhook de form → AI scoring → routing automático</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Daily Digest Worker</h4>
+      <p>Cron diario que resume actividad del día</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> WhatsApp Bot Backend</h4>
+      <p>Lógica de chatbot para onboarding de clientes</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Invoice Generator</h4>
+      <p>Worker que genera PDFs y los guarda en R2</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Client Portal API</h4>
+      <p>Backend para portal de clientes con auth (D1 + KV sessions)</p>
+    </div>
+    <div class="use-case">
+      <h4><span class="badge badge-orange">🔜</span> Analytics Collector</h4>
+      <p>Pixel de tracking propio, datos en D1, dashboard en Pages</p>
+    </div>
+  </section>
+
+  <!-- QUICKSTART -->
+  <section id="quickstart">
+    <h2>Quick Start — Deploy en 5 Minutos</h2>
+    <pre><code># Instalar Wrangler (CLI de Cloudflare)
+npm install -g wrangler
+
+# Login
+wrangler login
+
+# Crear proyecto
+wrangler init mi-worker
+
+# Desarrollo local
+wrangler dev
+
+# Deploy
+wrangler deploy</code></pre>
+
+    <h3>Estructura mínima de un Worker</h3>
+    <pre><code>export default {
+  async fetch(request: Request, env: Env): Promise&lt;Response&gt; {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/webhook" && request.method === "POST") {
+      const data = await request.json();
+      await env.DB.prepare("INSERT INTO events (data) VALUES (?)")
+        .bind(JSON.stringify(data)).run();
+      return new Response("OK", { status: 200 });
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+
+  async scheduled(event: ScheduledEvent, env: Env): Promise&lt;void&gt; {
+    console.log("Cron ejecutado:", event.cron);
+  }
+};</code></pre>
+
+    <h3>wrangler.toml mínimo</h3>
+    <pre><code>name = "mi-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mi-db"
+database_id = "xxx"
+
+[triggers]
+crons = ["0 9 * * *"]  # Diario a las 9am</code></pre>
+  </section>
+
+  <!-- COMPARISON -->
+  <section id="comparison">
+    <h2>Workers vs Alternativas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>CF Workers</th><th>AWS Lambda</th><th>Vercel Functions</th><th>Railway</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Cold start</strong></td><td><span class="check">~0ms (edge)</span></td><td>100-500ms</td><td>50-250ms</td><td>0 (always on)</td></tr>
+          <tr><td><strong>Free tier</strong></td><td>100K req/día</td><td>1M req/mes</td><td>100K req/mes</td><td>$5 crédito</td></tr>
+          <tr><td><strong>Pricing</strong></td><td>$0.30/M</td><td>~$0.20/M</td><td>$0.60/M</td><td>Por uso</td></tr>
+          <tr><td><strong>Global edge</strong></td><td><span class="check">✅ 300+ cities</span></td><td><span class="cross">❌ Regional</span></td><td><span class="check">✅ Edge</span></td><td><span class="cross">❌ Regional</span></td></tr>
+          <tr><td><strong>Built-in DB</strong></td><td><span class="check">✅ D1, KV, R2</span></td><td><span class="cross">❌ Separate</span></td><td><span class="check">✅ KV, Postgres</span></td><td><span class="cross">❌ Add-ons</span></td></tr>
+          <tr><td><strong>Built-in AI</strong></td><td><span class="check">✅ Workers AI</span></td><td><span class="check">✅ Bedrock</span></td><td><span class="check">✅ AI SDK</span></td><td><span class="cross">❌</span></td></tr>
+          <tr><td><strong>Max duration</strong></td><td>30s CPU</td><td>15min</td><td>60s (hobby)</td><td>∞</td></tr>
+          <tr><td><strong>Language</strong></td><td>JS/TS/WASM</td><td>Cualquiera</td><td>JS/TS</td><td>Cualquiera</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- LIMITATIONS -->
+  <section id="limitations">
+    <h2>Limitaciones Reales</h2>
+    <ul>
+      <li><strong>No Python nativo</strong> (beta, no maduro). JS/TS es el ciudadano de primera clase</li>
+      <li><strong>30s CPU max</strong> en paid. Para jobs largos: Workflows o server real</li>
+      <li><strong>128MB RAM</strong> por worker. No para ML pesado</li>
+      <li><strong>No file system</strong> — todo es fetch/streams. Sin <code>fs.readFile()</code></li>
+      <li><strong>Eventual consistency en KV</strong> — writes tardan ~60s en propagarse</li>
+      <li><strong>D1 es SQLite</strong> — sin features avanzadas de Postgres</li>
+      <li><strong>Vendor lock-in parcial</strong> — KV, D1, Durable Objects no son portables</li>
+    </ul>
+  </section>
+
+  <!-- LINKS -->
+  <section id="links">
+    <h2>Referencias</h2>
+    <div class="cards">
+      <div class="card"><h4>📘 Workers Docs</h4><p><a href="https://developers.cloudflare.com/workers/">developers.cloudflare.com/workers</a></p></div>
+      <div class="card"><h4>🗃️ D1 Docs</h4><p><a href="https://developers.cloudflare.com/d1/">developers.cloudflare.com/d1</a></p></div>
+      <div class="card"><h4>📦 R2 Docs</h4><p><a href="https://developers.cloudflare.com/r2/">developers.cloudflare.com/r2</a></p></div>
+      <div class="card"><h4>🤖 Workers AI</h4><p><a href="https://developers.cloudflare.com/workers-ai/">developers.cloudflare.com/workers-ai</a></p></div>
+      <div class="card"><h4>💰 Pricing</h4><p><a href="https://developers.cloudflare.com/workers/platform/pricing/">Pricing details</a></p></div>
+      <div class="card"><h4>💻 Examples</h4><p><a href="https://developers.cloudflare.com/workers/examples/">Code examples</a></p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Cloudflare Workers Platform — Documentación interna · 2026
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#f6821f',
+      primaryTextColor: '#e5e5e5',
+      primaryBorderColor: '#2a2a2a',
+      lineColor: '#f6821f',
+      secondaryColor: '#1e1e1e',
+      tertiaryColor: '#141414',
+      background: '#141414',
+      mainBkg: '#1e1e1e',
+      nodeBorder: '#f6821f',
+      clusterBkg: '#141414',
+      clusterBorder: '#2a2a2a',
+      titleColor: '#fbad41',
+      edgeLabelBackground: '#0a0a0a',
+      actorBkg: '#1e1e1e',
+      actorBorder: '#f6821f',
+      actorTextColor: '#e5e5e5',
+      signalColor: '#f6821f',
+      signalTextColor: '#e5e5e5',
+      noteBkgColor: '#1e1e1e',
+      noteTextColor: '#e5e5e5',
+      noteBorderColor: '#2a2a2a'
+    },
+    flowchart: { curve: 'basis', useMaxWidth: true },
+    sequence: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
