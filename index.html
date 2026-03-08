@@ -4,347 +4,568 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cloudflare Workers Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --text: #e5e5e5;
-    --text-muted: #888;
-    --accent: #f6821f;
-    --accent2: #fbad41;
-    --blue: #4a9eff;
-    --green: #34d399;
-    --red: #f87171;
-    --purple: #a78bfa;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
-  }
-  .hero {
-    padding: 80px 20px 60px;
-    text-align: center;
-    background: linear-gradient(180deg, #1a1000 0%, var(--bg) 100%);
-    border-bottom: 1px solid var(--border);
-  }
-  .hero h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 16px;
-  }
-  .hero p {
-    color: var(--text-muted);
-    font-size: 1.15rem;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-  section {
-    padding: 60px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  section:last-child { border-bottom: none; }
-  h2 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 32px;
-    letter-spacing: -0.02em;
-    color: var(--accent);
-  }
-  h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 32px 0 16px;
-    color: var(--text);
-  }
-  h4 {
-    font-size: 1.05rem;
-    font-weight: 600;
-    margin: 24px 0 12px;
-    color: var(--accent2);
-  }
-  p, li { color: var(--text); font-size: 0.95rem; }
-  ul, ol { padding-left: 24px; margin-bottom: 16px; }
-  li { margin-bottom: 8px; }
-  strong { color: #fff; }
-  a { color: var(--blue); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+:root {
+  --bg-void: #000000;
+  --bg: #050505;
+  --bg-elevated: #0a0a0a;
+  --bg-subtle: #111111;
+  --glass-bg: rgba(255,255,255,0.03);
+  --glass-border: rgba(255,255,255,0.07);
+  --glass-hover: rgba(255,255,255,0.06);
+  --text: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --text-ghost: #3f3f46;
+  --accent: #f6821f;
+  --accent-dim: rgba(246,130,31,0.15);
+  --accent-glow: rgba(246,130,31,0.4);
+  --green: #34d399;
+  --green-dim: rgba(52,211,153,0.12);
+  --red: #f87171;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
-  /* Tables */
-  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-  th {
-    text-align: left;
-    padding: 12px 16px;
-    background: var(--surface2);
-    color: var(--accent);
-    font-weight: 600;
-    border-bottom: 2px solid var(--border);
-    white-space: nowrap;
-  }
-  td {
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-  tr:hover td { background: var(--surface); }
+/* Grain overlay */
+body::before {
+  content:'';position:fixed;inset:0;opacity:0.025;pointer-events:none;z-index:9998;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
-  /* Cards grid */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-    margin: 16px 0;
-  }
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    transition: border-color 0.2s;
-  }
-  .card:hover { border-color: var(--accent); }
-  .card h4 { margin-top: 0; color: var(--accent2); }
-  .card p { color: var(--text-muted); font-size: 0.88rem; }
+/* Grid overlay */
+body::after {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:80px 80px;
+}
 
-  /* Mermaid diagrams */
-  .diagram-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px 24px;
-    margin: 24px 0;
-    overflow-x: auto;
-  }
-  .diagram-block h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: var(--accent2);
-    font-size: 1.1rem;
-  }
-  .mermaid {
-    display: flex;
-    justify-content: center;
-  }
-  .mermaid svg { max-width: 100%; height: auto; }
+body {
+  font-family:'Space Grotesk',sans-serif;
+  background:var(--bg-void);
+  color:var(--text);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
 
-  /* Code */
-  code {
-    background: var(--surface2);
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.88em;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    color: var(--accent2);
-  }
-  pre {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    overflow-x: auto;
-    margin: 16px 0;
-  }
-  pre code {
-    background: none;
-    padding: 0;
-    color: var(--text);
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
+/* === HERO === */
+.hero {
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:40px 24px;
+  overflow:hidden;
+}
+.hero-canvas {
+  position:absolute;inset:0;z-index:0;
+}
+.hero-gradient {
+  position:absolute;inset:0;z-index:1;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 40%, rgba(246,130,31,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 30% 60%, rgba(251,173,65,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 70% 30%, rgba(246,130,31,0.04) 0%, transparent 60%);
+}
+.hero-fade {
+  position:absolute;bottom:0;left:0;right:0;height:200px;z-index:2;
+  background:linear-gradient(transparent, var(--bg-void));
+}
+.hero-content {
+  position:relative;z-index:3;text-align:center;max-width:900px;
+}
+.hero-badge {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 16px;border-radius:100px;
+  background:var(--accent-dim);
+  border:1px solid rgba(246,130,31,0.2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.72rem;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.12em;
+  color:var(--accent);margin-bottom:32px;
+  animation:fade-up 0.8s ease-out both;
+}
+.hero-badge .dot {
+  width:6px;height:6px;border-radius:50%;background:var(--accent);
+  animation:pulse-glow 2s ease-in-out infinite;
+}
+.hero h1 {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,9rem);
+  font-weight:400;
+  line-height:0.9;
+  letter-spacing:-0.02em;
+  text-transform:uppercase;
+  color:var(--text);
+  margin-bottom:24px;
+  animation:fade-up 0.8s ease-out 0.1s both;
+}
+.hero h1 span {
+  background:linear-gradient(135deg, var(--accent), #fbad41);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub {
+  font-size:clamp(1rem,2.5vw,1.25rem);
+  color:var(--text-secondary);
+  max-width:560px;margin:0 auto 40px;
+  animation:fade-up 0.8s ease-out 0.2s both;
+}
+.hero-stats {
+  display:flex;gap:48px;justify-content:center;flex-wrap:wrap;
+  animation:fade-up 0.8s ease-out 0.3s both;
+}
+.hero-stat {
+  text-align:center;
+}
+.hero-stat .val {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.5rem;color:var(--text);
+  line-height:1;
+}
+.hero-stat .label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.65rem;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--text-muted);margin-top:4px;
+}
 
-  /* Badges */
-  .badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-right: 6px;
-  }
-  .badge-green { background: #064e3b; color: var(--green); }
-  .badge-orange { background: #451a03; color: var(--accent2); }
-  .badge-blue { background: #1e3a5f; color: var(--blue); }
-  .badge-red { background: #450a0a; color: var(--red); }
+/* === NAV (sticky) === */
+.nav {
+  position:sticky;top:0;z-index:100;
+  padding:12px 24px;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--glass-border);
+}
+.nav-inner {
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;gap:24px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav a {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.72rem;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--text-muted);
+  text-decoration:none;white-space:nowrap;
+  padding:6px 0;border-bottom:1px solid transparent;
+  transition:all 0.3s;
+}
+.nav a:hover {color:var(--accent);border-bottom-color:var(--accent)}
 
-  /* Use case list */
-  .use-case {
-    background: var(--surface);
-    border-left: 3px solid var(--accent);
-    padding: 16px 20px;
-    margin: 12px 0;
-    border-radius: 0 8px 8px 0;
-  }
-  .use-case.done { border-left-color: var(--green); }
-  .use-case h4 { margin: 0 0 4px; font-size: 0.95rem; }
-  .use-case p { margin: 0; color: var(--text-muted); font-size: 0.88rem; }
+/* === CONTAINER === */
+.container {max-width:1200px;margin:0 auto;padding:0 24px}
 
-  /* Comparison highlights */
-  .check { color: var(--green); }
-  .cross { color: var(--red); }
+/* === SECTIONS === */
+section {padding:100px 0;position:relative}
+section + section::before {
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:min(80%, 600px);height:1px;
+  background:linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+.section-label {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem;text-transform:uppercase;
+  letter-spacing:0.15em;color:var(--accent);
+  margin-bottom:12px;display:block;
+}
+.section-title {
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(1.8rem,4vw,2.8rem);
+  font-weight:700;letter-spacing:-0.03em;
+  color:var(--text);margin-bottom:48px;
+}
 
-  /* Footer */
-  footer {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-  }
+/* === GLASS CARDS === */
+.glass {
+  background:var(--glass-bg);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.glass:hover {
+  border-color:rgba(246,130,31,0.25);
+  box-shadow:0 0 40px rgba(246,130,31,0.06);
+  transform:translateY(-2px);
+}
 
-  /* TOC */
-  .toc {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
-  }
-  .toc h3 { margin: 0 0 12px; font-size: 1rem; color: var(--text-muted); }
-  .toc ul { list-style: none; padding: 0; margin: 0; columns: 2; }
-  .toc li { margin-bottom: 6px; }
-  .toc a { color: var(--text); font-size: 0.9rem; }
-  .toc a:hover { color: var(--accent); }
+/* === BENTO GRID === */
+.bento {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:16px;
+}
+.bento-item {padding:28px;position:relative;overflow:hidden}
+.bento-item.span-2 {grid-column:span 2}
+.bento-item.span-3 {grid-column:span 3}
+.bento-icon {
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;margin-bottom:16px;
+  background:var(--accent-dim);
+}
+.bento-item h3 {
+  font-size:1rem;font-weight:600;margin-bottom:6px;color:var(--text);
+}
+.bento-item p {
+  font-size:0.85rem;color:var(--text-muted);line-height:1.5;
+}
+.bento-tag {
+  display:inline-block;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.6rem;text-transform:uppercase;
+  letter-spacing:0.08em;
+  padding:3px 8px;border-radius:4px;margin-top:10px;
+  background:rgba(255,255,255,0.04);color:var(--text-muted);
+  border:1px solid rgba(255,255,255,0.06);
+}
 
-  @media (max-width: 640px) {
-    .toc ul { columns: 1; }
-    .cards { grid-template-columns: 1fr; }
-    .hero { padding: 48px 16px 40px; }
-    section { padding: 40px 0; }
+/* === DIAGRAM BLOCKS === */
+.diagram-wrap {
+  margin:32px 0;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--glass-border);
+  background:var(--bg-elevated);
+}
+.diagram-header {
+  padding:16px 24px;
+  border-bottom:1px solid var(--glass-border);
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.02);
+}
+.diagram-header .dots {display:flex;gap:6px}
+.diagram-header .dot-r{width:10px;height:10px;border-radius:50%;background:#ff5f57}
+.diagram-header .dot-y{width:10px;height:10px;border-radius:50%;background:#febc2e}
+.diagram-header .dot-g{width:10px;height:10px;border-radius:50%;background:#28c840}
+.diagram-title {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.75rem;color:var(--text-muted);
+  margin-left:8px;
+}
+.diagram-body {
+  padding:32px;overflow-x:auto;
+  display:flex;justify-content:center;
+}
+.mermaid svg {max-width:100%;height:auto}
+
+/* === TABLES === */
+.table-wrap {
+  border-radius:16px;overflow:hidden;
+  border:1px solid var(--glass-border);
+  background:var(--bg-elevated);
+  margin:24px 0;
+}
+.table-label {
+  padding:16px 20px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--text-muted);
+  border-bottom:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.02);
+}
+table {width:100%;border-collapse:collapse;font-size:0.88rem}
+th {
+  text-align:left;padding:14px 20px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--accent);
+  font-weight:500;
+  border-bottom:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.015);
+}
+td {
+  padding:12px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  color:var(--text-secondary);
+  font-size:0.85rem;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+td strong{color:var(--text)}
+.val-green{color:var(--green)}
+.val-red{color:var(--red)}
+.val-accent{color:var(--accent)}
+
+/* === USE CASES === */
+.use-cases {display:flex;flex-direction:column;gap:12px}
+.use-case {
+  display:flex;align-items:flex-start;gap:16px;
+  padding:20px 24px;border-radius:12px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  transition:all 0.3s;
+}
+.use-case:hover{border-color:rgba(246,130,31,0.2)}
+.use-case .status {
+  flex-shrink:0;margin-top:2px;
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;
+}
+.use-case .status.live {background:var(--green-dim);color:var(--green)}
+.use-case .status.next {background:var(--accent-dim);color:var(--accent)}
+.use-case h4 {font-size:0.95rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.use-case p {font-size:0.82rem;color:var(--text-muted)}
+
+/* === CODE BLOCKS === */
+pre {
+  background:var(--bg-elevated);
+  border:1px solid var(--glass-border);
+  border-radius:12px;
+  padding:24px;overflow-x:auto;
+  margin:20px 0;
+}
+pre code {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.8rem;color:var(--text-secondary);line-height:1.7;
+}
+code {
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.82em;padding:2px 7px;border-radius:4px;
+  background:rgba(255,255,255,0.06);color:var(--accent);
+}
+
+/* === COMPARISON SECTION === */
+.compare-grid {
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(240px,1fr));gap:16px;
+}
+.compare-card {padding:28px}
+.compare-card h3 {
+  font-size:1.1rem;font-weight:700;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.compare-card .metric {
+  display:flex;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:0.82rem;
+}
+.compare-card .metric:last-child{border-bottom:none}
+.compare-card .metric span:first-child{color:var(--text-muted)}
+.compare-card .metric span:last-child{color:var(--text);font-weight:500}
+
+/* === LIMITATIONS === */
+.limits {display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.limit-item {
+  padding:20px;border-radius:12px;
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-left:3px solid var(--red);
+}
+.limit-item h4{font-size:0.9rem;color:var(--text);margin-bottom:4px}
+.limit-item p{font-size:0.82rem;color:var(--text-muted)}
+
+/* === INSIGHT CALLOUT === */
+.callout {
+  padding:24px 28px;border-radius:16px;
+  background:var(--accent-dim);
+  border:1px solid rgba(246,130,31,0.2);
+  margin:32px 0;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.callout .icon{font-size:1.5rem;flex-shrink:0;margin-top:2px}
+.callout p{font-size:0.92rem;color:var(--text);line-height:1.6}
+.callout strong{color:var(--accent)}
+
+/* === LINKS GRID === */
+.links-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;
+}
+.link-card {
+  padding:20px;border-radius:12px;text-decoration:none;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  transition:all 0.3s;display:block;
+}
+.link-card:hover{border-color:rgba(246,130,31,0.3);transform:translateY(-2px)}
+.link-card .lc-icon{font-size:1.3rem;margin-bottom:8px}
+.link-card h4{font-size:0.88rem;color:var(--text);margin-bottom:2px}
+.link-card p{font-size:0.72rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+
+/* === FOOTER === */
+footer {
+  text-align:center;padding:60px 24px 40px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.7rem;color:var(--text-ghost);
+  letter-spacing:0.05em;
+}
+
+/* === ANIMATIONS === */
+@keyframes fade-up {
+  from{opacity:0;transform:translateY(24px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulse-glow {
+  0%,100%{opacity:1}50%{opacity:0.4}
+}
+@keyframes float {
+  0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity:0;transform:translateY(30px);
+  transition:opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.reveal.visible {opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:0.1s}
+.reveal-delay-2{transition-delay:0.2s}
+.reveal-delay-3{transition-delay:0.3s}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms!important;
+    transition-duration:0.01ms!important;
   }
+}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .bento-item.span-2,.bento-item.span-3{grid-column:span 2}
+}
+@media(max-width:640px){
+  .bento{grid-template-columns:1fr}
+  .bento-item.span-2,.bento-item.span-3{grid-column:span 1}
+  .hero-stats{gap:32px}
+  section{padding:64px 0}
+  .compare-grid{grid-template-columns:1fr}
+  .limits{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <h1>⚡ Cloudflare Workers Platform</h1>
-  <p>Infraestructura serverless edge-first para automatizaciones, APIs, webhooks y herramientas de consultoría de IA.</p>
-</div>
-
-<div class="container">
-
-  <div class="toc">
-    <h3>Contenido</h3>
-    <ul>
-      <li><a href="#why">Por qué Workers</a></li>
-      <li><a href="#ecosystem">Ecosistema Completo</a></li>
-      <li><a href="#architecture">Diagramas de Arquitectura</a></li>
-      <li><a href="#pricing">Pricing</a></li>
-      <li><a href="#use-cases">Casos de Uso</a></li>
-      <li><a href="#quickstart">Quick Start</a></li>
-      <li><a href="#comparison">Workers vs Alternativas</a></li>
-      <li><a href="#limitations">Limitaciones</a></li>
-      <li><a href="#links">Referencias</a></li>
-    </ul>
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <canvas class="hero-canvas" id="heroCanvas"></canvas>
+  <div class="hero-gradient"></div>
+  <div class="hero-fade"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> Serverless Edge Platform</div>
+    <h1>Cloudflare<br><span>Workers</span></h1>
+    <p class="hero-sub">Infraestructura serverless edge-first para automatizaciones, APIs, webhooks y herramientas de consultoría de IA.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val">300+</div><div class="label">Edge Cities</div></div>
+      <div class="hero-stat"><div class="val">&lt;1ms</div><div class="label">Cold Start</div></div>
+      <div class="hero-stat"><div class="val">$5</div><div class="label">/ Month</div></div>
+      <div class="hero-stat"><div class="val">10M</div><div class="label">Requests Incl.</div></div>
+    </div>
   </div>
+</section>
 
-  <!-- WHY -->
-  <section id="why">
-    <h2>Por qué Cloudflare Workers</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Ventaja</th><th>Detalle</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Cero servers</strong></td><td>No hay VPS, no hay Docker, no hay mantenimiento. Deploy con <code>wrangler deploy</code></td></tr>
-          <tr><td><strong>Edge global</strong></td><td>Código corre en 300+ ciudades. Latencia &lt;50ms para cualquier cliente</td></tr>
-          <tr><td><strong>Free tier generoso</strong></td><td>100K requests/día gratis. Plan paid $5/mes = 10M requests</td></tr>
-          <tr><td><strong>Ecosistema completo</strong></td><td>DB, storage, queues, cron, AI — todo integrado sin config externa</td></tr>
-          <tr><td><strong>JS/TS nativo</strong></td><td>Sin overhead de frameworks. Fetch API estándar</td></tr>
-        </tbody>
-      </table>
+<!-- ===== NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#ecosystem">Ecosistema</a>
+    <a href="#architecture">Arquitectura</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#use-cases">Casos de Uso</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="#comparison">Comparativa</a>
+    <a href="#limitations">Limitaciones</a>
+    <a href="#links">Referencias</a>
+  </div>
+</nav>
+
+<!-- ===== ECOSYSTEM ===== -->
+<section id="ecosystem">
+  <div class="container">
+    <span class="section-label reveal">01 — Ecosistema</span>
+    <h2 class="section-title reveal">Mapa Completo de Servicios</h2>
+
+    <div class="bento">
+      <div class="glass bento-item span-2 reveal">
+        <div class="bento-icon">⚡</div>
+        <h3>Compute</h3>
+        <p><strong>Workers</strong> — Funciones serverless JS/TS/WASM. 10ms CPU free, 30s paid.<br>
+        <strong>Pages Functions</strong> — Workers + sitio estático.<br>
+        <strong>Durable Objects</strong> — Estado persistente + WebSockets.<br>
+        <strong>Workflows</strong> — Orquestación multi-step.</p>
+        <span class="bento-tag">Core</span>
+      </div>
+      <div class="glass bento-item span-2 reveal reveal-delay-1">
+        <div class="bento-icon">🗄️</div>
+        <h3>Storage & Data</h3>
+        <p><strong>KV</strong> — Key-value global, eventual consistency.<br>
+        <strong>D1</strong> — SQLite serverless.<br>
+        <strong>R2</strong> — Object storage S3-compatible. Sin egress fees.<br>
+        <strong>Queues</strong> — Message queues para procesamiento async.<br>
+        <strong>Vectorize</strong> — Vector DB para embeddings.<br>
+        <strong>Hyperdrive</strong> — Accelerator para Postgres/MySQL.</p>
+        <span class="bento-tag">Persistencia</span>
+      </div>
+      <div class="glass bento-item span-2 reveal">
+        <div class="bento-icon">🤖</div>
+        <h3>AI & ML</h3>
+        <p><strong>Workers AI</strong> — LLMs, image gen, embeddings, speech-to-text corriendo en el edge.<br>
+        <strong>AI Gateway</strong> — Proxy para OpenAI/Anthropic con caching, rate limiting y logging integrado.</p>
+        <span class="bento-tag">Inteligencia</span>
+      </div>
+      <div class="glass bento-item span-2 reveal reveal-delay-1">
+        <div class="bento-icon">🔔</div>
+        <h3>Triggers</h3>
+        <p><strong>HTTP</strong> — Cualquier request a tu URL.<br>
+        <strong>Cron</strong> — Tareas periódicas con expresiones cron.<br>
+        <strong>Queue consumers</strong> — On message arrival.<br>
+        <strong>Email</strong> — Procesar emails entrantes.<br>
+        <strong>Tail Workers</strong> — Observar logs real-time.</p>
+        <span class="bento-tag">Eventos</span>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ECOSYSTEM -->
-  <section id="ecosystem">
-    <h2>Ecosistema Cloudflare — Mapa Completo</h2>
+<!-- ===== ARCHITECTURE ===== -->
+<section id="architecture">
+  <div class="container">
+    <span class="section-label reveal">02 — Arquitectura</span>
+    <h2 class="section-title reveal">Diagramas del Sistema</h2>
 
-    <div class="cards">
-      <div class="card">
-        <h4>⚡ Compute</h4>
-        <p><strong>Workers</strong> — Funciones serverless (JS/TS/WASM). Máx 10ms CPU free, 30s paid<br>
-        <strong>Pages Functions</strong> — Workers + sitio estático<br>
-        <strong>Durable Objects</strong> — Estado persistente + WebSockets<br>
-        <strong>Workflows</strong> — Orquestación de pasos</p>
+    <div class="diagram-wrap reveal">
+      <div class="diagram-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="diagram-title">ecosystem-overview.mmd</span>
       </div>
-      <div class="card">
-        <h4>🗄️ Storage & Data</h4>
-        <p><strong>KV</strong> — Key-value global, eventual consistency<br>
-        <strong>D1</strong> — SQLite serverless<br>
-        <strong>R2</strong> — Object storage S3-compatible (sin egress fees!)<br>
-        <strong>Queues</strong> — Message queues async<br>
-        <strong>Vectorize</strong> — Vector DB para embeddings<br>
-        <strong>Hyperdrive</strong> — Proxy para Postgres/MySQL</p>
-      </div>
-      <div class="card">
-        <h4>🤖 AI & ML</h4>
-        <p><strong>Workers AI</strong> — Modelos de ML en el edge (LLMs, image gen, embeddings, STT)<br>
-        <strong>AI Gateway</strong> — Proxy para OpenAI/Anthropic con caching, rate limiting, logging</p>
-      </div>
-      <div class="card">
-        <h4>🔔 Triggers</h4>
-        <p><strong>HTTP</strong> — Cualquier request a tu URL<br>
-        <strong>Cron Triggers</strong> — Tareas periódicas<br>
-        <strong>Queue consumers</strong> — Cuando llega un mensaje<br>
-        <strong>Email triggers</strong> — Emails entrantes<br>
-        <strong>Tail Workers</strong> — Observar logs en real-time</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ARCHITECTURE -->
-  <section id="architecture">
-    <h2>Arquitectura — Diagramas</h2>
-
-    <div class="diagram-block">
-      <h3>1. Vista General del Ecosistema</h3>
-      <div class="mermaid">
+      <div class="diagram-body">
+        <div class="mermaid">
 graph TB
-    subgraph "TRIGGERS"
-        HTTP["🌐 HTTP Requests"]
-        CRON["⏰ Cron Triggers"]
-        QUEUE_T["📨 Queue Events"]
-        EMAIL["📧 Email Events"]
+    subgraph TRIGGERS
+        HTTP["🌐 HTTP"]
+        CRON["⏰ Cron"]
+        QUEUE_T["📨 Queue"]
+        EMAIL["📧 Email"]
     end
-    subgraph "COMPUTE · Edge · 300+ cities"
-        W1["⚡ Worker: API Gateway"]
-        W2["⚡ Worker: Webhooks"]
-        W3["⚡ Worker: Cron Jobs"]
-        W4["⚡ Worker: AI Pipeline"]
+    subgraph COMPUTE
+        W1["⚡ API Gateway"]
+        W2["⚡ Webhooks"]
+        W3["⚡ Cron Jobs"]
+        W4["⚡ AI Pipeline"]
         DO["🔒 Durable Objects"]
     end
-    subgraph "STORAGE"
-        KV["🗄️ KV Store"]
-        D1["🗃️ D1 SQLite"]
-        R2["📦 R2 S3"]
+    subgraph STORAGE
+        KV["🗄️ KV"]
+        D1["🗃️ D1"]
+        R2["📦 R2"]
         VEC["🧠 Vectorize"]
         Q["📬 Queues"]
     end
-    subgraph "EXTERNAL APIs"
-        OAI["OpenAI / Anthropic"]
-        WA["WhatsApp API"]
-        TG["Telegram API"]
-        GHL["GoHighLevel"]
+    subgraph EXTERNAL
+        OAI["OpenAI"]
+        WA["WhatsApp"]
+        TG["Telegram"]
+        GHL["GHL"]
         STRIPE["Stripe"]
-        CAL["Calendly"]
     end
     HTTP --> W1 & W2
     CRON --> W3
@@ -356,340 +577,514 @@ graph TB
     W4 --> VEC & OAI
     W1 --> GHL & STRIPE
     W2 --> WA & TG
-    W3 --> CAL
-    W4 --> OAI
     DO --> D1
+        </div>
       </div>
     </div>
 
-    <div class="diagram-block">
-      <h3>2. Patrón: Webhook → Process → Notify</h3>
-      <div class="mermaid">
+    <div class="diagram-wrap reveal">
+      <div class="diagram-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="diagram-title">webhook-flow.mmd</span>
+      </div>
+      <div class="diagram-body">
+        <div class="mermaid">
 sequenceDiagram
-    participant Client as 📱 Cliente
-    participant Worker as ⚡ Worker
-    participant D1 as 🗃️ D1
-    participant Queue as 📬 Queue
-    participant Notifier as ⚡ Notifier
+    participant C as 📱 Cliente
+    participant W as ⚡ Worker
+    participant DB as 🗃️ D1
+    participant Q as 📬 Queue
+    participant N as ⚡ Notifier
     participant WA as 📲 WhatsApp
-    Client->>Worker: POST /webhook
-    Worker->>Worker: Validar payload
-    Worker->>D1: INSERT evento
-    Worker->>Queue: Encolar notificación
-    Worker-->>Client: 200 OK · menos de 50ms
-    Note over Queue,Notifier: Async · no bloquea response
-    Queue->>Notifier: Trigger consumer
-    Notifier->>WA: Enviar notificación
-    Notifier->>D1: UPDATE status = notified
+    C->>W: POST /webhook
+    W->>W: Validar payload
+    W->>DB: INSERT evento
+    W->>Q: Encolar
+    W-->>C: 200 OK ‹50ms
+    Note over Q,N: Async
+    Q->>N: Trigger
+    N->>WA: Notificar
+    N->>DB: status=done
+        </div>
       </div>
     </div>
 
-    <div class="diagram-block">
-      <h3>3. Patrón: AI Pipeline con RAG</h3>
-      <div class="mermaid">
+    <div class="diagram-wrap reveal">
+      <div class="diagram-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="diagram-title">rag-pipeline.mmd</span>
+      </div>
+      <div class="diagram-body">
+        <div class="mermaid">
 graph LR
     subgraph Ingesta
-        DOC["📄 Documento"] --> EMBED["⚡ Embedder"]
-        EMBED --> VEC["🧠 Vectorize"]
-        EMBED --> R2["📦 R2"]
+        DOC["📄 Doc"] --> EMB["⚡ Embedder"]
+        EMB --> VEC["🧠 Vectorize"]
+        EMB --> R2["📦 R2"]
     end
     subgraph Query
-        USER["👤 Usuario"] --> API["⚡ Chat API"]
+        USR["👤 User"] --> API["⚡ Chat API"]
         API --> VEC
         VEC -->|Top K| API
         API --> R2
-        R2 -->|Contexto| API
+        R2 -->|Context| API
         API --> LLM["🤖 LLM"]
         LLM --> API
-        API --> USER
+        API --> USR
     end
+        </div>
       </div>
     </div>
 
-    <div class="diagram-block">
-      <h3>4. Patrón: CRM Automático para Consultoría</h3>
-      <div class="mermaid">
+    <div class="diagram-wrap reveal">
+      <div class="diagram-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="diagram-title">crm-automation.mmd</span>
+      </div>
+      <div class="diagram-body">
+        <div class="mermaid">
 graph TB
-    subgraph "Captura de Leads"
-        FORM["📋 Discovery Form"] --> W_FORM["⚡ Form Handler"]
-        CAL["📅 Calendly"] --> W_CAL["⚡ Calendar Handler"]
-        WA_IN["📲 WhatsApp"] --> W_WA["⚡ WA Handler"]
+    subgraph Capture
+        FORM["📋 Form"] --> WF["⚡ Handler"]
+        CAL["📅 Calendly"] --> WC["⚡ Handler"]
+        WAI["📲 WhatsApp"] --> WW["⚡ Handler"]
     end
-    subgraph Procesamiento
-        W_FORM --> D1["🗃️ D1: Leads"]
-        W_CAL --> D1
-        W_WA --> D1
-        D1 --> SCORE["⚡ Lead Scorer AI"]
-        SCORE --> KV["🗄️ KV: Cache"]
+    subgraph Process
+        WF --> D1["🗃️ Leads DB"]
+        WC --> D1
+        WW --> D1
+        D1 --> SC["⚡ AI Scorer"]
     end
-    subgraph "Acciones Automáticas"
-        SCORE -->|Score mayor a 80| NOTIFY["📲 Notificar"]
-        SCORE -->|Score mayor a 60| SEQ["📧 Email Seq"]
-        SCORE -->|Score menor a 40| TAG["🏷️ Nurture"]
-        CRON["⏰ Daily Digest"] --> D1
-        CRON --> NOTIFY
+    subgraph Actions
+        SC -->|High| NOT["📲 Alert"]
+        SC -->|Mid| SEQ["📧 Sequence"]
+        SC -->|Low| TAG["🏷️ Nurture"]
+        CR["⏰ Digest"] --> D1
     end
+        </div>
       </div>
     </div>
 
-    <div class="diagram-block">
-      <h3>5. Stack Completo — Vista de Capas</h3>
-      <div class="mermaid">
+    <div class="diagram-wrap reveal">
+      <div class="diagram-header">
+        <div class="dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div>
+        <span class="diagram-title">stack-layers.mmd</span>
+      </div>
+      <div class="diagram-body">
+        <div class="mermaid">
 graph TB
-    subgraph "Capa 1: Edge"
+    subgraph Edge
         CDN["🌐 CDN + DNS + SSL"]
         WAF["🛡️ WAF + DDoS"]
     end
-    subgraph "Capa 2: Compute"
-        WORKERS["⚡ Workers JS/TS"]
-        PAGES["📄 Pages"]
+    subgraph Compute
+        WK["⚡ Workers"]
+        PG["📄 Pages"]
     end
-    subgraph "Capa 3: Data"
+    subgraph Data
         KV2["KV"]
         D12["D1"]
         R22["R2"]
         Q2["Queues"]
     end
-    subgraph "Capa 4: AI"
+    subgraph AI
         WAI["Workers AI"]
         AIG["AI Gateway"]
-        VEC2["Vectorize"]
+        VC["Vectorize"]
     end
-    subgraph "Capa 5: Integraciones"
-        EXT["APIs Externas"]
+    subgraph Integrations
+        EX["APIs"]
         WH["Webhooks"]
-        MAIL["Email Routing"]
+        ML["Email"]
     end
-    CDN --> WORKERS & PAGES
-    WAF --> WORKERS
-    WORKERS --> KV2 & D12 & R22 & Q2
-    WORKERS --> WAI & AIG & VEC2
-    WORKERS --> EXT & WH & MAIL
+    CDN --> WK & PG
+    WAF --> WK
+    WK --> KV2 & D12 & R22 & Q2
+    WK --> WAI & AIG & VC
+    WK --> EX & WH & ML
+        </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- PRICING -->
-  <section id="pricing">
-    <h2>Pricing — Lo que Importa</h2>
+<!-- ===== PRICING ===== -->
+<section id="pricing">
+  <div class="container">
+    <span class="section-label reveal">03 — Pricing</span>
+    <h2 class="section-title reveal">Lo que Importa</h2>
 
-    <h3>Free Plan</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Recurso</th><th>Límite</th></tr></thead>
-        <tbody>
-          <tr><td>Workers requests</td><td>100,000/día</td></tr>
-          <tr><td>KV reads</td><td>100,000/día</td></tr>
-          <tr><td>KV writes</td><td>1,000/día</td></tr>
-          <tr><td>D1 reads</td><td>5M/día</td></tr>
-          <tr><td>D1 writes</td><td>100K/día</td></tr>
-          <tr><td>D1 storage</td><td>5GB</td></tr>
-          <tr><td>R2 storage</td><td>10GB</td></tr>
-          <tr><td>R2 operations</td><td>1M Class A, 10M Class B / mes</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>Paid Plan — $5/mes</h3>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Recurso</th><th>Incluido</th><th>Extra</th></tr></thead>
-        <tbody>
-          <tr><td>Workers requests</td><td>10M/mes</td><td>$0.30/M</td></tr>
-          <tr><td>KV reads</td><td>10M/mes</td><td>$0.50/M</td></tr>
-          <tr><td>KV writes</td><td>1M/mes</td><td>$5.00/M</td></tr>
-          <tr><td>D1 reads</td><td>25B/mes</td><td>$0.001/M</td></tr>
-          <tr><td>D1 writes</td><td>50M/mes</td><td>$1.00/M</td></tr>
-          <tr><td>D1 storage</td><td>5GB</td><td>$0.75/GB</td></tr>
-          <tr><td>R2 storage</td><td>10GB</td><td>$0.015/GB</td></tr>
-          <tr><td>Queues</td><td>1M ops/mes</td><td>$0.40/M</td></tr>
-          <tr><td>Durable Objects</td><td>1M requests</td><td>$0.15/M</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:16px;color:var(--accent2);font-weight:600;">💡 $5/mes te da una infraestructura que en AWS/GCP costaría $50-200/mes. Y sin egress fees en R2.</p>
-  </section>
-
-  <!-- USE CASES -->
-  <section id="use-cases">
-    <h2>Casos de Uso para Consultoría</h2>
-
-    <h3>Implementado</h3>
-    <div class="use-case done">
-      <h4><span class="badge badge-green">✅ Live</span> Discovery Form Handler</h4>
-      <p>Captura leads, guarda en D1, notifica</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px">
+      <div class="table-wrap reveal">
+        <div class="table-label">Free Plan — $0/mes</div>
+        <table>
+          <thead><tr><th>Recurso</th><th>Límite</th></tr></thead>
+          <tbody>
+            <tr><td>Workers requests</td><td><strong>100,000/día</strong></td></tr>
+            <tr><td>KV reads</td><td>100,000/día</td></tr>
+            <tr><td>KV writes</td><td>1,000/día</td></tr>
+            <tr><td>D1 reads</td><td>5M/día</td></tr>
+            <tr><td>D1 writes</td><td>100K/día</td></tr>
+            <tr><td>D1 storage</td><td>5GB</td></tr>
+            <tr><td>R2 storage</td><td>10GB</td></tr>
+            <tr><td>R2 operations</td><td>1M / 10M por mes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap reveal reveal-delay-1">
+        <div class="table-label">Paid Plan — $5/mes</div>
+        <table>
+          <thead><tr><th>Recurso</th><th>Incluido</th><th>Extra</th></tr></thead>
+          <tbody>
+            <tr><td>Workers requests</td><td><strong>10M/mes</strong></td><td class="val-accent">$0.30/M</td></tr>
+            <tr><td>KV reads</td><td>10M/mes</td><td>$0.50/M</td></tr>
+            <tr><td>KV writes</td><td>1M/mes</td><td>$5.00/M</td></tr>
+            <tr><td>D1 reads</td><td>25B/mes</td><td>$0.001/M</td></tr>
+            <tr><td>D1 writes</td><td>50M/mes</td><td>$1.00/M</td></tr>
+            <tr><td>R2 storage</td><td>10GB</td><td>$0.015/GB</td></tr>
+            <tr><td>Queues</td><td>1M ops</td><td>$0.40/M</td></tr>
+            <tr><td>Durable Objects</td><td>1M req</td><td>$0.15/M</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <h3>Próximos</h3>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Webhook Hub</h4>
-      <p>Endpoint central para webhooks de GHL, Stripe, Calendly → procesar → notificar</p>
+    <div class="callout reveal">
+      <span class="icon">💡</span>
+      <p><strong>$5/mes</strong> te da una infraestructura que en AWS/GCP costaría <strong>$50–200/mes</strong> mínimo. Y R2 tiene <strong>cero egress fees</strong> — algo que S3 jamás te dará gratis.</p>
     </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> AI Chat API</h4>
-      <p>RAG sobre documentos de consultoría para clientes</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Lead Scoring Automático</h4>
-      <p>Webhook de form → AI scoring → routing automático</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Daily Digest Worker</h4>
-      <p>Cron diario que resume actividad del día</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> WhatsApp Bot Backend</h4>
-      <p>Lógica de chatbot para onboarding de clientes</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Invoice Generator</h4>
-      <p>Worker que genera PDFs y los guarda en R2</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Client Portal API</h4>
-      <p>Backend para portal de clientes con auth (D1 + KV sessions)</p>
-    </div>
-    <div class="use-case">
-      <h4><span class="badge badge-orange">🔜</span> Analytics Collector</h4>
-      <p>Pixel de tracking propio, datos en D1, dashboard en Pages</p>
-    </div>
-  </section>
+  </div>
+</section>
 
-  <!-- QUICKSTART -->
-  <section id="quickstart">
-    <h2>Quick Start — Deploy en 5 Minutos</h2>
-    <pre><code># Instalar Wrangler (CLI de Cloudflare)
+<!-- ===== USE CASES ===== -->
+<section id="use-cases">
+  <div class="container">
+    <span class="section-label reveal">04 — Aplicaciones</span>
+    <h2 class="section-title reveal">Casos de Uso para Consultoría</h2>
+
+    <div class="use-cases">
+      <div class="use-case reveal">
+        <div class="status live">✓</div>
+        <div><h4>Discovery Form Handler</h4><p>Captura leads, guarda en D1, notifica por WhatsApp</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Webhook Hub</h4><p>Endpoint central para GHL, Stripe, Calendly → procesar → notificar</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>AI Chat API</h4><p>RAG sobre documentos de consultoría para clientes</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Lead Scoring Automático</h4><p>Webhook → AI scoring → routing automático según score</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Daily Digest Worker</h4><p>Cron diario que resume toda la actividad del día</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>WhatsApp Bot Backend</h4><p>Lógica de chatbot para onboarding de clientes</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Invoice Generator</h4><p>Worker que genera PDFs y los guarda en R2</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Client Portal API</h4><p>Backend para portal de clientes con auth (D1 + KV sessions)</p></div>
+      </div>
+      <div class="use-case reveal">
+        <div class="status next">→</div>
+        <div><h4>Analytics Collector</h4><p>Pixel de tracking propio → D1 → dashboard en Pages</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUICKSTART ===== -->
+<section id="quickstart">
+  <div class="container">
+    <span class="section-label reveal">05 — Setup</span>
+    <h2 class="section-title reveal">Deploy en 5 Minutos</h2>
+
+    <pre class="reveal"><code><span style="color:var(--text-muted)"># Instalar Wrangler</span>
 npm install -g wrangler
 
-# Login
+<span style="color:var(--text-muted)"># Login a Cloudflare</span>
 wrangler login
 
-# Crear proyecto
+<span style="color:var(--text-muted)"># Crear proyecto</span>
 wrangler init mi-worker
 
-# Desarrollo local
+<span style="color:var(--text-muted)"># Dev local con hot reload</span>
 wrangler dev
 
-# Deploy
+<span style="color:var(--text-muted)"># Deploy a producción</span>
 wrangler deploy</code></pre>
 
-    <h3>Estructura mínima de un Worker</h3>
-    <pre><code>export default {
-  async fetch(request: Request, env: Env): Promise&lt;Response&gt; {
-    const url = new URL(request.url);
+    <h3 style="font-size:1.1rem;margin:32px 0 16px;color:var(--text)" class="reveal">Worker mínimo</h3>
+    <pre class="reveal"><code><span style="color:var(--purple)">export default</span> {
+  <span style="color:var(--blue)">async</span> <span style="color:var(--accent)">fetch</span>(request: Request, env: Env): Promise&lt;Response&gt; {
+    <span style="color:var(--purple)">const</span> url = <span style="color:var(--purple)">new</span> URL(request.url);
 
-    if (url.pathname === "/webhook" && request.method === "POST") {
-      const data = await request.json();
-      await env.DB.prepare("INSERT INTO events (data) VALUES (?)")
+    <span style="color:var(--purple)">if</span> (url.pathname === <span style="color:var(--green)">"/webhook"</span> && request.method === <span style="color:var(--green)">"POST"</span>) {
+      <span style="color:var(--purple)">const</span> data = <span style="color:var(--blue)">await</span> request.json();
+      <span style="color:var(--blue)">await</span> env.DB.prepare(<span style="color:var(--green)">"INSERT INTO events (data) VALUES (?)"</span>)
         .bind(JSON.stringify(data)).run();
-      return new Response("OK", { status: 200 });
+      <span style="color:var(--purple)">return new</span> Response(<span style="color:var(--green)">"OK"</span>, { status: <span style="color:var(--accent)">200</span> });
     }
 
-    return new Response("Not found", { status: 404 });
+    <span style="color:var(--purple)">return new</span> Response(<span style="color:var(--green)">"Not found"</span>, { status: <span style="color:var(--accent)">404</span> });
   },
 
-  async scheduled(event: ScheduledEvent, env: Env): Promise&lt;void&gt; {
-    console.log("Cron ejecutado:", event.cron);
+  <span style="color:var(--blue)">async</span> <span style="color:var(--accent)">scheduled</span>(event: ScheduledEvent, env: Env): Promise&lt;<span style="color:var(--purple)">void</span>&gt; {
+    console.log(<span style="color:var(--green)">"Cron ejecutado:"</span>, event.cron);
   }
 };</code></pre>
 
-    <h3>wrangler.toml mínimo</h3>
-    <pre><code>name = "mi-worker"
-main = "src/index.ts"
-compatibility_date = "2025-01-01"
+    <h3 style="font-size:1.1rem;margin:32px 0 16px;color:var(--text)" class="reveal">wrangler.toml</h3>
+    <pre class="reveal"><code>name = <span style="color:var(--green)">"mi-worker"</span>
+main = <span style="color:var(--green)">"src/index.ts"</span>
+compatibility_date = <span style="color:var(--green)">"2025-01-01"</span>
 
 [[d1_databases]]
-binding = "DB"
-database_name = "mi-db"
-database_id = "xxx"
+binding = <span style="color:var(--green)">"DB"</span>
+database_name = <span style="color:var(--green)">"mi-db"</span>
+database_id = <span style="color:var(--green)">"xxx"</span>
 
 [triggers]
-crons = ["0 9 * * *"]  # Diario a las 9am</code></pre>
-  </section>
+crons = [<span style="color:var(--green)">"0 9 * * *"</span>]  <span style="color:var(--text-muted)"># Diario 9am</span></code></pre>
+  </div>
+</section>
 
-  <!-- COMPARISON -->
-  <section id="comparison">
-    <h2>Workers vs Alternativas</h2>
-    <div class="table-wrap">
+<!-- ===== COMPARISON ===== -->
+<section id="comparison">
+  <div class="container">
+    <span class="section-label reveal">06 — Comparativa</span>
+    <h2 class="section-title reveal">Workers vs Alternativas</h2>
+
+    <div class="table-wrap reveal">
       <table>
-        <thead><tr><th></th><th>CF Workers</th><th>AWS Lambda</th><th>Vercel Functions</th><th>Railway</th></tr></thead>
+        <thead>
+          <tr><th></th><th>CF Workers</th><th>AWS Lambda</th><th>Vercel</th><th>Railway</th></tr>
+        </thead>
         <tbody>
-          <tr><td><strong>Cold start</strong></td><td><span class="check">~0ms (edge)</span></td><td>100-500ms</td><td>50-250ms</td><td>0 (always on)</td></tr>
-          <tr><td><strong>Free tier</strong></td><td>100K req/día</td><td>1M req/mes</td><td>100K req/mes</td><td>$5 crédito</td></tr>
-          <tr><td><strong>Pricing</strong></td><td>$0.30/M</td><td>~$0.20/M</td><td>$0.60/M</td><td>Por uso</td></tr>
-          <tr><td><strong>Global edge</strong></td><td><span class="check">✅ 300+ cities</span></td><td><span class="cross">❌ Regional</span></td><td><span class="check">✅ Edge</span></td><td><span class="cross">❌ Regional</span></td></tr>
-          <tr><td><strong>Built-in DB</strong></td><td><span class="check">✅ D1, KV, R2</span></td><td><span class="cross">❌ Separate</span></td><td><span class="check">✅ KV, Postgres</span></td><td><span class="cross">❌ Add-ons</span></td></tr>
-          <tr><td><strong>Built-in AI</strong></td><td><span class="check">✅ Workers AI</span></td><td><span class="check">✅ Bedrock</span></td><td><span class="check">✅ AI SDK</span></td><td><span class="cross">❌</span></td></tr>
-          <tr><td><strong>Max duration</strong></td><td>30s CPU</td><td>15min</td><td>60s (hobby)</td><td>∞</td></tr>
-          <tr><td><strong>Language</strong></td><td>JS/TS/WASM</td><td>Cualquiera</td><td>JS/TS</td><td>Cualquiera</td></tr>
+          <tr><td><strong>Cold start</strong></td><td class="val-green">~0ms</td><td>100–500ms</td><td>50–250ms</td><td>0 (always on)</td></tr>
+          <tr><td><strong>Free tier</strong></td><td>100K/día</td><td>1M/mes</td><td>100K/mes</td><td>$5 crédito</td></tr>
+          <tr><td><strong>Pricing</strong></td><td class="val-green">$0.30/M</td><td>~$0.20/M</td><td>$0.60/M</td><td>Por uso</td></tr>
+          <tr><td><strong>Global edge</strong></td><td class="val-green">✓ 300+ cities</td><td class="val-red">✗ Regional</td><td class="val-green">✓ Edge</td><td class="val-red">✗ Regional</td></tr>
+          <tr><td><strong>Built-in DB</strong></td><td class="val-green">✓ D1, KV, R2</td><td class="val-red">✗ Separate</td><td class="val-green">✓ KV, Pg</td><td class="val-red">✗ Add-ons</td></tr>
+          <tr><td><strong>Built-in AI</strong></td><td class="val-green">✓ Workers AI</td><td class="val-green">✓ Bedrock</td><td class="val-green">✓ AI SDK</td><td class="val-red">✗</td></tr>
+          <tr><td><strong>Max duration</strong></td><td>30s CPU</td><td class="val-green">15min</td><td>60s</td><td class="val-green">∞</td></tr>
+          <tr><td><strong>Lenguajes</strong></td><td>JS/TS/WASM</td><td class="val-green">Cualquiera</td><td>JS/TS</td><td class="val-green">Cualquiera</td></tr>
         </tbody>
       </table>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- LIMITATIONS -->
-  <section id="limitations">
-    <h2>Limitaciones Reales</h2>
-    <ul>
-      <li><strong>No Python nativo</strong> (beta, no maduro). JS/TS es el ciudadano de primera clase</li>
-      <li><strong>30s CPU max</strong> en paid. Para jobs largos: Workflows o server real</li>
-      <li><strong>128MB RAM</strong> por worker. No para ML pesado</li>
-      <li><strong>No file system</strong> — todo es fetch/streams. Sin <code>fs.readFile()</code></li>
-      <li><strong>Eventual consistency en KV</strong> — writes tardan ~60s en propagarse</li>
-      <li><strong>D1 es SQLite</strong> — sin features avanzadas de Postgres</li>
-      <li><strong>Vendor lock-in parcial</strong> — KV, D1, Durable Objects no son portables</li>
-    </ul>
-  </section>
+<!-- ===== LIMITATIONS ===== -->
+<section id="limitations">
+  <div class="container">
+    <span class="section-label reveal">07 — Trade-offs</span>
+    <h2 class="section-title reveal">Limitaciones Reales</h2>
 
-  <!-- LINKS -->
-  <section id="links">
-    <h2>Referencias</h2>
-    <div class="cards">
-      <div class="card"><h4>📘 Workers Docs</h4><p><a href="https://developers.cloudflare.com/workers/">developers.cloudflare.com/workers</a></p></div>
-      <div class="card"><h4>🗃️ D1 Docs</h4><p><a href="https://developers.cloudflare.com/d1/">developers.cloudflare.com/d1</a></p></div>
-      <div class="card"><h4>📦 R2 Docs</h4><p><a href="https://developers.cloudflare.com/r2/">developers.cloudflare.com/r2</a></p></div>
-      <div class="card"><h4>🤖 Workers AI</h4><p><a href="https://developers.cloudflare.com/workers-ai/">developers.cloudflare.com/workers-ai</a></p></div>
-      <div class="card"><h4>💰 Pricing</h4><p><a href="https://developers.cloudflare.com/workers/platform/pricing/">Pricing details</a></p></div>
-      <div class="card"><h4>💻 Examples</h4><p><a href="https://developers.cloudflare.com/workers/examples/">Code examples</a></p></div>
+    <div class="limits">
+      <div class="limit-item reveal">
+        <h4>No Python nativo</h4>
+        <p>Beta, no maduro. JS/TS es ciudadano de primera clase.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>30s CPU máximo</h4>
+        <p>Plan paid. Para jobs largos necesitas Workflows o server real.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>128MB RAM</h4>
+        <p>No para ML pesado ni datasets en memoria.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>Sin file system</h4>
+        <p>Todo es fetch/streams. No hay fs.readFile().</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>KV eventual consistency</h4>
+        <p>Writes tardan ~60s en propagarse globalmente.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>D1 es SQLite</h4>
+        <p>Sin JSON queries avanzados ni full-text search nativo.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>Vendor lock-in parcial</h4>
+        <p>KV, D1, Durable Objects no son portables a otro provider.</p>
+      </div>
+      <div class="limit-item reveal">
+        <h4>Sin networking privado</h4>
+        <p>No hay VPC ni private subnets. Workers vive en internet público.</p>
+      </div>
     </div>
-  </section>
 
-</div>
+    <div class="callout reveal" style="margin-top:40px">
+      <span class="icon">⚖️</span>
+      <p><strong>La jugada inteligente:</strong> Workers para el 80% barato y rápido. Un server real (Railway, Fly.io) para el 20% que Workers no puede. No es either/or.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== LINKS ===== -->
+<section id="links">
+  <div class="container">
+    <span class="section-label reveal">08 — Referencias</span>
+    <h2 class="section-title reveal">Documentación Oficial</h2>
+
+    <div class="links-grid">
+      <a href="https://developers.cloudflare.com/workers/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">📘</div><h4>Workers Docs</h4><p>developers.cloudflare.com/workers</p>
+      </a>
+      <a href="https://developers.cloudflare.com/d1/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">🗃️</div><h4>D1 Database</h4><p>developers.cloudflare.com/d1</p>
+      </a>
+      <a href="https://developers.cloudflare.com/r2/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">📦</div><h4>R2 Storage</h4><p>developers.cloudflare.com/r2</p>
+      </a>
+      <a href="https://developers.cloudflare.com/workers-ai/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">🤖</div><h4>Workers AI</h4><p>developers.cloudflare.com/workers-ai</p>
+      </a>
+      <a href="https://developers.cloudflare.com/workers/platform/pricing/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">💰</div><h4>Pricing</h4><p>pricing details</p>
+      </a>
+      <a href="https://developers.cloudflare.com/workers/examples/" target="_blank" class="link-card reveal">
+        <div class="lc-icon">💻</div><h4>Code Examples</h4><p>workers/examples</p>
+      </a>
+    </div>
+  </div>
+</section>
 
 <footer>
   Cloudflare Workers Platform — Documentación interna · 2026
 </footer>
 
+<!-- ===== SCRIPTS ===== -->
 <script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'dark',
-    themeVariables: {
-      primaryColor: '#f6821f',
-      primaryTextColor: '#e5e5e5',
-      primaryBorderColor: '#2a2a2a',
-      lineColor: '#f6821f',
-      secondaryColor: '#1e1e1e',
-      tertiaryColor: '#141414',
-      background: '#141414',
-      mainBkg: '#1e1e1e',
-      nodeBorder: '#f6821f',
-      clusterBkg: '#141414',
-      clusterBorder: '#2a2a2a',
-      titleColor: '#fbad41',
-      edgeLabelBackground: '#0a0a0a',
-      actorBkg: '#1e1e1e',
-      actorBorder: '#f6821f',
-      actorTextColor: '#e5e5e5',
-      signalColor: '#f6821f',
-      signalTextColor: '#e5e5e5',
-      noteBkgColor: '#1e1e1e',
-      noteTextColor: '#e5e5e5',
-      noteBorderColor: '#2a2a2a'
-    },
-    flowchart: { curve: 'basis', useMaxWidth: true },
-    sequence: { useMaxWidth: true }
+// Mermaid
+mermaid.initialize({
+  startOnLoad:true,
+  theme:'dark',
+  themeVariables:{
+    primaryColor:'#1a1a1a',
+    primaryTextColor:'#e5e5e5',
+    primaryBorderColor:'#333',
+    lineColor:'#f6821f',
+    secondaryColor:'#111',
+    tertiaryColor:'#0a0a0a',
+    background:'#0a0a0a',
+    mainBkg:'#141414',
+    nodeBorder:'#f6821f',
+    clusterBkg:'#0a0a0a',
+    clusterBorder:'#222',
+    titleColor:'#fbad41',
+    edgeLabelBackground:'#050505',
+    actorBkg:'#141414',
+    actorBorder:'#f6821f',
+    actorTextColor:'#e5e5e5',
+    signalColor:'#f6821f',
+    signalTextColor:'#e5e5e5',
+    noteBkgColor:'#1a1a1a',
+    noteTextColor:'#e5e5e5',
+    noteBorderColor:'#333',
+    fontSize:'13px'
+  },
+  flowchart:{curve:'basis',useMaxWidth:true},
+  sequence:{useMaxWidth:true}
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
   });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Hero particle canvas
+const canvas = document.getElementById('heroCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let w, h;
+
+function resize() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * w;
+    this.y = Math.random() * h;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.r = Math.random() * 1.5 + 0.3;
+    this.alpha = Math.random() * 0.4 + 0.05;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(246,130,31,${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+const count = Math.min(120, Math.floor(w * h / 8000));
+for (let i = 0; i < count; i++) particles.push(new Particle());
+
+function drawLines() {
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(246,130,31,${0.06 * (1 - dist / 120)})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, w, h);
+  particles.forEach(p => { p.update(); p.draw(); });
+  drawLines();
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Smooth scroll
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 </script>
 </body>
 </html>
